@@ -16,8 +16,8 @@
                   </div>
               </div>
               <div class="date-time-container">
-                  <span v-editable class="date">{{ article.date }}</span>
-                  <span v-editable class="time"> {{ article.time }}</span>
+                  <span v-editable v-bind:active="activeEdit" key="article.date" class="date">{{ article.date }}</span>
+                  <span v-editable v-bind:active="activeEdit" key="article.time"  class="time"> {{ article.time }}</span>
               </div>
               <section id="" class="share-widget article-share" data-title={ article.title } data-tweet={ article.tweet } data-url="https://broadly.vice.com/en_us/article/a-palm-reader-who-claims-she-read-donald-trumps-hand-tells-all" data-media="//broadly-images.vice.com/images/articles/meta/2016/04/03/the-palm-reader-who-claims-she-read-donald-trumps-hand-1459715053.jpg?crop=0.75xw:1xh;center,top" data-topic="Politics">
                   <div class="facebook" data-share-type="facebook">
@@ -47,7 +47,7 @@
                           Photo via Youtube </p>
                   </div>
                   <div class="image-placeholder"></div>
-                  <p v-editable class="entry-summary">
+                  <p  v-editable v-bind:active="activeEdit" key="article.summary"  class="entry-summary">
                       {{ article.summary }} </p>
                   <div class="vmp-ad display-none" data-ref="content_small" id="content_small-APilhjkludmFxT-1459914179734-5" style="display: none;"></div>
               </section>
@@ -150,9 +150,13 @@ export default {
       bind: function(value) {
         this.el.classList.add('editable');
         this.el.addEventListener('click', (evt) => {
-          // console.log(this.params);
+          console.log(`click: ${this.params.key}`);
           this.el.focus();
           this.vm.setEditable(this.params.key);
+          this.el.addEventListener('blur', (evt) => {
+            console.log(`blur: ${this.params.key}`);
+            this.vm.setEditable(null);
+          })
         });
       },
       unbind: function() {
