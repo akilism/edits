@@ -2,7 +2,7 @@
   <div id="app">
   <div class="page-container article-single-container  ">
       <section class="lede entry-header" id="">
-          <div class="primary-topic">
+          <div v-editable v-bind:active="activeEdit" key="article.topics" v-bind:edit-method="topicSelection.bind(this, true)" class="primary-topic">
               <a href="//broadly.vice.com/en_us/topic/politics">{{ article.topics[0] }}</a>
           </div>
           <h1 v-editable v-bind:active="activeEdit" key="article.title" class="entry-title">{{ article.title }}</h1>
@@ -140,16 +140,23 @@ const articleData = {
 export default {
   directives: {
     editable: {
-      params: ['active', 'key'],
+      params: ['active', 'key', 'edit-method'],
       paramWatchers: {
         active: function (value) {
-          console.log('make editable: ', value);
-          this.el.contentEditable = (value && value.activeEdit === value.key) ? true : false;
+          console.log(value, this.params);
+          if(this.params.editMethod) {
+            console.log('running edit method');
+            this.params.editMethod();
+          } else {
+            console.log('make editable: ', value);
+            this.el.contentEditable = (value && value.activeEdit === value.key) ? true : false;
+          }
         }
       },
       bind: function(value) {
         this.el.classList.add('editable');
         this.el.addEventListener('click', (evt) => {
+          evt.preventDefault();
           console.log(`click: ${this.params.key}`);
           this.el.focus();
           this.vm.setEditable(this.params.key);
@@ -190,6 +197,9 @@ export default {
         console.log(`setting ${key} to editable`);
         this.activeEdit = key;
       // }
+    },
+    topicSelection(isPrimary) {
+      console.log(this.article.topics);
     }
   }
 }
