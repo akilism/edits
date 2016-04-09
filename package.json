@@ -9,7 +9,14 @@
   },
   "dependencies": {
     "vue": "^1.0.0",
-    "babel-runtime": "^5.8.0"
+    "babel-runtime": "^5.8.0",
+    "scribe-editor": "git+https://git@github.com:guardian/scribe.git",
+    "scribe-plugin-toolbar": "git+https://git@github.com:guardian/scribe-plugin-toolbar.git",
+    "scribe-plugin-formatter-html-ensure-semantic-elements": "git+https://git@github.com:guardian/scribe-plugin-formatter-html-ensure-semantic-elements.git",
+    "scribe-plugin-formatter-plain-text-convert-new-lines-to-html": "git+https://git@github.com:guardian/scribe-plugin-formatter-plain-text-convert-new-lines-to-html.git",
+    "scribe-plugin-link-prompt-command": "git@github.com:guardian/scribe-plugin-link-prompt-command.git",
+    "scribe-plugin-intelligent-unlink-command": "git@github.com:guardian/scribe-plugin-intelligent-unlink-command.git",
+    "scribe-plugin-blockquote-command": "git@github.com:guardian/scribe-plugin-blockquote-command.git"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",

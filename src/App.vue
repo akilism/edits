@@ -1,16 +1,33 @@
 <template>
   <div id="app">
-  <div class="page-container article-single-container  ">
+  <div class="toolbar">
+    <button data-command-name="bold">Bold</button>
+    <button data-command-name="italic">Italic</button>
+    <button data-command-name="underline">Underline</button>
+    <button data-command-name="linkPrompt">Link</button>
+    <button data-command-name="unlink">Unlink</button>
+    <button data-command-name="blockquote">Blockquote</button>
+    <button data-command-name="undo">Undo</button>
+    <button data-command-name="redo">Redo</button>
+    <button data-command-name="cleanup">Clean</button>
+    <button data-command-name="removeFormat">Remove Formatting</button>
+  </div>
+  <div v-if="activeEdit === 'article.topics'">
+    <topic-manager v-bind:topics="article.topics"></topic-manager>
+  </div>
+  <div class="page-container article-single-container">
       <section class="lede entry-header" id="">
-          <div v-editable v-bind:active="activeEdit" key="article.topics" v-bind:edit-method="topicSelection.bind(this, true)" class="primary-topic">
-              <a href="//broadly.vice.com/en_us/topic/politics">{{ article.topics[0] }}</a>
+          <div v-editable v-bind:active="activeEdit" v-bind:edit-fn="toggleTopicManager" key="article.topics" class="primary-topic">
+              <!-- <a href="//broadly.vice.com/en_us/topic/politics"> -->
+              {{ article.topics[0] }}
+              <!-- </a> -->
           </div>
           <h1 v-editable v-bind:active="activeEdit" key="article.title" class="entry-title">{{ article.title }}</h1>
           <div class="entry-subheader">
               <div class="contributor-widget">
-                  <a href="//broadly.vice.com/en_us/contributor/brenna-ehrlich">
+                  <!-- <a href="//broadly.vice.com/en_us/contributor/brenna-ehrlich"> -->
                       <div class="contributor-image"><img src="//broadly-images.vice.com/images/contributors/meta/2016/04/02/brenna-ehrlich-1459630909.jpg?crop=1xw:1xh;center,top&amp;resize=300:*&amp;output-quality=70" alt="Brenna Ehrlich"></div>
-                  </a>
+                  <!-- </a> -->
                   <div class="contributor-name">
                       <span class="byline">by <a href="//broadly.vice.com/en_us/contributor/brenna-ehrlich">{{ article.byline.name }}</a></span>
                   </div>
@@ -125,10 +142,17 @@
           </section>
       </div>
   </div>
-
 </template>
 
 <script>
+import Scribe from 'scribe-editor';
+import scribePluginToolbar from 'scribe-plugin-toolbar';
+import scribePluginLinkPromptCmd from 'scribe-plugin-link-prompt-command';
+import scribePluginIntellUnlinkCmd from 'scribe-plugin-intelligent-unlink-command';
+import scribePluginBlockquoteCmd from 'scribe-plugin-blockquote-command';
+
+import { default as TopicManager } from './TopicManager.vue';
+
 const articleData = {
   topics: ['Politics', 'Fortune Telling', 'Donald Trump', 'Palm Readers', 'Fortune', 'Election 2016'],
   summary: 'She says Trump\'s hand was red and puffy, showing no signs of him becoming president.',
@@ -138,18 +162,36 @@ const articleData = {
   byline: { name: 'Brenna Ehrlich', slug: 'brenna-ehrlich' }
 };
 export default {
+  components: {
+    'topic-manager': TopicManager
+  },
   directives: {
     editable: {
-      params: ['active', 'key', 'edit-method'],
+      params: ['active', 'editFn', 'key'],
       paramWatchers: {
         active: function (value) {
-          console.log(value, this.params);
-          if(this.params.editMethod) {
-            console.log('running edit method');
-            this.params.editMethod();
+          console.log('make editable: ', value);
+          // this.el.contentEditable = (value && value.activeEdit === value.key) ? true : false;
+
+          if(value === this.params.key) {
+            this.el.classList.add('edit-on');
+            console.log(this.params);
+            if(this.params.editFn) {
+
+              this.params.editFn(true);
+            } else {
+              this.vm.scribe = new Scribe(this.el, { allowBlockElements: false });
+              if(!this.vm.scribeToolbar) {
+                this.vm.scribeToolbar = scribePluginToolbar(document.querySelector('.toolbar'));
+                this.vm.scribe.use(scribePluginLinkPromptCmd());
+                this.vm.scribe.use(scribePluginIntellUnlinkCmd());
+                this.vm.scribe.use(scribePluginBlockquoteCmd());
+                this.vm.scribe.use(this.vm.scribeToolbar);
+              }
+            }
           } else {
-            console.log('make editable: ', value);
-            this.el.contentEditable = (value && value.activeEdit === value.key) ? true : false;
+            this.el.classList.remove('edit-on');
+            this.el.contentEditable = false;
           }
         }
       },
@@ -160,10 +202,10 @@ export default {
           console.log(`click: ${this.params.key}`);
           this.el.focus();
           this.vm.setEditable(this.params.key);
-          this.el.addEventListener('blur', (evt) => {
-            console.log(`blur: ${this.params.key}`);
-            this.vm.setEditable(null);
-          })
+          // this.el.addEventListener('blur', (evt) => {
+          //   console.log(`blur: ${this.params.key}`);
+          //   this.vm.setEditable(null);
+          // })
         });
       },
       unbind: function() {
@@ -173,13 +215,10 @@ export default {
   },
   data () {
     return {
-      // note: changing this line won't causes changes
-      // with hot-reload because the reloaded component
-      // preserves its current state and we are modifying
-      // its initial state.
-      msg: 'Hello Vue!',
       article: articleData,
-      activeEdit: null
+      activeEdit: null,
+      scribe: null,
+      isTopicManagerVisible: false
     }
   },
   methods: {
@@ -198,8 +237,8 @@ export default {
         this.activeEdit = key;
       // }
     },
-    topicSelection(isPrimary) {
-      console.log(this.article.topics);
+    toggleTopicManager(isVisible) {
+      this.isTopicManagerVisible = isVisible;
     }
   }
 }
@@ -213,5 +252,34 @@ body {
 .editable:hover {
   cursor: pointer;
   outline: 1px solid black;
+}
+
+.edit-on {
+  background-color: #dfdfdf;
+}
+
+.toolbar {
+  position: fixed;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  z-index: 100;
+  background-color: #fff;
+  flex-wrap: wrap;
+}
+
+.toolbar button {
+  border-width: 1px;
+  border-radius: 3px;
+  margin: 5px 5px;
+  min-width: 125px;
+  max-width: 125px;
+  padding: 5px 10px;
+  flex: 1;
+}
+
+.page-container {
+  padding-top: 95px;
 }
 </style>
